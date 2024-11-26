@@ -15,5 +15,5 @@ The **Tilt Hydrometer** is a sensor that floats in your beer fermentation vessel
 
 ## ToDo
 Things to be improved on:
-- make the tilt handling code a bit more generic (so it automatically handles one or two devices of any color)
-- improve the power saving by implementing a deep sleep after reading values.
+- make the tilt handling code a bit more generic (so it automatically handles one or two devices of any color, currently hard coded for two)
+- improve the power saving by implementing a configureable deep sleep after reading values (currently doing a regular sleep for 1hr)
