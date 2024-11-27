@@ -13,6 +13,7 @@ from inkplate5 import Inkplate
 
 _IRQ_SCAN_RESULT = const(5)
 _IRQ_SCAN_DONE = const(6)
+SLEEP_MINUTES = 60
 
 def connect_and_get_time():
     wlan = network.WLAN(network.STA_IF)
@@ -53,6 +54,51 @@ def dump_and_write(filename, data, is_request=False):
     f.close()
     return data_to_dump
 
+# bluetooth irq event handler
+def bt_irq(event, data):
+    global scan_done
+    global tilt_data
+    
+    if event == _IRQ_SCAN_RESULT:      
+        addr_type, addr, connectable, rssi, adv_data = data
+        parsed_data = parse_data(addr, adv_data)
+        print(parsed_data)
+        if parsed_data['uuid'] in TILT_DEVICES:
+            grav = (int(parsed_data['minor'], 16)) / 1000
+            temp = round((int(parsed_data['major'], 16) - 32) / 1.8, 1)
+            temp = (temp * 1.8) + 32            
+            tilt = TILT_DEVICES[parsed_data['uuid']]
+            
+            tilt_data[f"{tilt}_temp"] = temp
+            tilt_data[f"{tilt}_grav"] = grav
+            print(tilt_data)
+
+    elif event == _IRQ_SCAN_DONE:
+        print("Scan complete")
+        scan_done = True
+
+
+def wait_for_tilt():
+    global scan_done
+
+    scanned = 0
+    while not scan_done:
+        print("Still scanning")
+        sleep(1)
+    return scan_done
+
+# used to parse out the bluetooth data, with tilt major is temp, minor is SG
+def parse_data(addr, adv_data):
+    mac_raw = binascii.hexlify(addr).decode('utf-8')
+    raw_data = binascii.hexlify(bytes(adv_data)).decode('ascii')
+    return {
+        'mac': ':'.join(mac_raw[i:i+2] for i in range(0,12,2)),
+        'uuid': raw_data[18:50],
+        'major': raw_data[50:54],
+        'minor': raw_data[54:58],
+    }
+
+
 config_data = {
     'network_name': '',
     'network_password': '',
@@ -60,6 +106,8 @@ config_data = {
     'blue': '',
     'black': '',
 }
+
+
 
 try:
     f = open("config.json", "r")
@@ -91,6 +139,9 @@ tilt_data = {"blue_temp": "",
 ble = bluetooth.BLE()
 ble.active(True)
 
+scan_done = False
+last_voltage = 0.0
+
 display = Inkplate(Inkplate.INKPLATE_1BIT)
 display.begin()
 
@@ -108,70 +159,50 @@ print(f"Current time: {hour}:{minute:02}:{second:02}")
 display.rtcSetDate(weekday, mday, month, year)
 display.rtcSetTime(hour, minute, second)
 
+display.clearDisplay()
+display.printText(100, 100, "Starting up...")
+last_voltage = display.readBattery()
+display.setTextSize(2)
+time_date = display.rtcGetData()
+display.printText(80, 500, f"Battery voltage: {last_voltage:.3f}V (-0.000V), Updated: {time_date["hour"]}:{time_date["minute"]:02}")   
+display.display()
+
 # get names of current beers
 blue_beer = config_data["blue"]
 black_beer = config_data["black"]
 
-# used to parse out the bluetooth data, with tilt major is temp, minor is SG
-def parse_data(addr, adv_data):
-    mac_raw = binascii.hexlify(addr).decode('utf-8')
-    raw_data = binascii.hexlify(bytes(adv_data)).decode('ascii')
-    return {
-        'mac': ':'.join(mac_raw[i:i+2] for i in range(0,12,2)),
-        'uuid': raw_data[18:50],
-        'major': raw_data[50:54],
-        'minor': raw_data[54:58],
-    }
-
-def bt_irq_nothing(event, data):
-    pass
-
-# bluetooth irq event handler
-def bt_irq(event, data):
-    if event == _IRQ_SCAN_RESULT:      
-        addr_type, addr, connectable, rssi, adv_data = data
-        parsed_data = parse_data(addr, adv_data)
-        print(parsed_data)
-        if parsed_data['uuid'] in TILT_DEVICES:
-            grav = (int(parsed_data['minor'], 16)) / 1000
-            temp = round((int(parsed_data['major'], 16) - 32) / 1.8, 1)
-            temp = (temp * 1.8) + 32            
-            tilt = TILT_DEVICES[parsed_data['uuid']]
-            tilt_data[f"{tilt}_temp"] = temp
-            tilt_data[f"{tilt}_grav"] = grav
-
-    elif event == _IRQ_SCAN_DONE:
-        print("Scan complete")
-        display.clearDisplay()   
-        display.setTextSize(5)
-        display.printText(80, 50, blue_beer)
-        display.setTextSize(4)
-        display.printText(80, 100, f"Temperature: {tilt_data["blue_temp"]}")
-        display.printText(80, 150, f"Specific Gravity: {tilt_data["blue_grav"]}")
-        display.setTextSize(5)
-        display.printText(80, 250, black_beer)
-        display.setTextSize(4)
-        display.printText(80, 300, f"Temperature: {tilt_data["black_temp"]}")
-        display.printText(80, 350, f"Specific Gravity: {tilt_data["black_grav"]}")            
-        display.drawFastHLine(100, 225, 400, display.BLACK)
-        battery = str(display.readBattery())
-        display.setTextSize(2)
-        time_date = display.rtcGetData()
-        display.printText(80, 500, f"Battery voltage: {battery}V, Updated: {time_date["hour"]}:{time_date["minute"]:02}")       
-        display.partialUpdate()
-        
-    
-
 # start looking for tilts
 try:
-    display.clearDisplay()
-    display.printText(100, 100, "Starting Scan...")
-    display.display()
-    
     while True:
         # look for bluetooth devices for 15 secs, may need to modify if farther away (or more devices)
-        scan = ble.gap_scan(15000, 30000, 10000)
+        ble.gap_scan(20000, 30000, 10000)
         ble.irq(bt_irq)
-        sleep(3600)
+        
+        # wait for scan to be done
+        if wait_for_tilt():
+            display.clearDisplay()   
+            display.setTextSize(5)
+            display.printText(80, 50, blue_beer)
+            display.setTextSize(4)
+            display.printText(80, 100, f"Temperature: {tilt_data["blue_temp"]}")
+            display.printText(80, 150, f"Specific Gravity: {tilt_data["blue_grav"]}")
+            display.setTextSize(5)
+            display.printText(80, 250, black_beer)
+            display.setTextSize(4)
+            display.printText(80, 300, f"Temperature: {tilt_data["black_temp"]}")
+            display.printText(80, 350, f"Specific Gravity: {tilt_data["black_grav"]}")            
+            display.drawFastHLine(100, 225, 400, display.BLACK)
+            voltage = display.readBattery()
+            volt_diff = last_voltage - voltage
+            last_voltage = voltage
+            display.setTextSize(2)
+            time_date = display.rtcGetData()
+            display.printText(80, 500, f"Battery voltage: {voltage:.3f}V ({volt_diff:+.3f}V), Updated: {time_date["hour"]}:{time_date["minute"]:02}")       
+            display.partialUpdate()
+            
+        scan_done = False
+        print("sleeping for awhile...")
+        sleep(1)
+        machine.lightsleep(int(SLEEP_MINUTES * 60 * 1000))
 except OSError as e:
     pass
