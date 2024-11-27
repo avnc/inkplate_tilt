@@ -18,5 +18,4 @@ The **Tilt Hydrometer** is a sensor that floats in your beer fermentation vessel
 ## ToDo
 Things to be improved on:
 - make the tilt handling code a bit more generic (so it automatically handles one or two devices of any color, currently hard coded for two)
-- improve the power saving by implementing a configureable deep sleep after reading values (currently doing a regular sleep for 1hr). Found this repo that I wish I'd found earlier that implements the deepsleep and wake with an Inkplate 2: https://github.com/planbnet/tiltplate/tree/main
---*using machine.lighsleep for now*
+- improve the power saving by implementing a configureable deep sleep after reading values (currently doing a regular sleep for 1hr). Found this repo that I wish I'd found earlier that implements the deepsleep and wake with an Inkplate 2: https://github.com/planbnet/tiltplate/tree/main (*using machine.lightsleep for now*)
