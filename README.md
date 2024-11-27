@@ -5,7 +5,7 @@ This is a Micropython project to display [Tilt Hydrometer](https://tilthydromete
 
 The **Inkplate 5** is a cool little e-ink display with a built-in ESP32 microcontroller that can be programmed in Arduino or Micropython. I went with Micropython and to do the same, you'll need to follow the setup instructions for the board here: https://github.com/SolderedElectronics/Inkplate-micropython/tree/master. Note, Soldered includes a Micropython firmware to use based on Micropython 1.18 so it may be missing some newer Micropython features. It is possible to outfit it with later versions but this did not work well for me when I tried.
 
-You'll also need to grab the default Inkplate driver files from the the Inkplate repo, I've included my `main.py` file. You'll also need these (also included from the Soldered repo):
+You'll also need these (included from the Soldered repo):
 - `gfx.py`
 - `gfx_standard_font_01.py`
 - `inkplate5.py`
