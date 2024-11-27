@@ -107,8 +107,6 @@ config_data = {
     'black': '',
 }
 
-
-
 try:
     f = open("config.json", "r")
     config_data = ujson.loads(f.read())
@@ -193,7 +191,7 @@ try:
             display.printText(80, 350, f"Specific Gravity: {tilt_data["black_grav"]}")            
             display.drawFastHLine(100, 225, 400, display.BLACK)
             voltage = display.readBattery()
-            volt_diff = last_voltage - voltage
+            volt_diff = voltage - last_voltage
             last_voltage = voltage
             display.setTextSize(2)
             time_date = display.rtcGetData()
