@@ -1,11 +1,11 @@
 # Inkplate5 & Tilt Hydrometer
-This is a Micropython project to display [Tilt Hydrometer](https://tilthydrometer.com/products/copy-of-tilt-floating-wireless-hydrometer-and-thermometer-for-brewing) values on a [Soldered Inkplate 5](https://soldered.com/product/soldered-inkplate-5-gen2/). This code owes much to these two projects which worked out the hard bluetooth part of this equation: https://github.com/myoung34/bluey-lite and https://github.com/jicese/picoTilt and from which I have borrowed liberally.
+This is a Micropython project to display [Tilt Hydrometer](https://tilthydrometer.com/products/copy-of-tilt-floating-wireless-hydrometer-and-thermometer-for-brewing) values on a [Soldered Inkplate 5](https://soldered.com/product/soldered-inkplate-5-gen2/). This code owes much to these two projects which worked out the hard bluetooth part of this equation: https://github.com/myoung34/bluey-lite and https://github.com/jicese/picoTilt and https://github.com/planbnet/tiltplate/tree/main from which I have borrowed liberally.
 
 ![Image of Inkplate 5 with Tilt data](IMG_3984.jpg)
 
 The **Inkplate 5** is a cool little e-ink display with a built-in ESP32 microcontroller that can be programmed in Arduino or Micropython. I went with Micropython and to do the same, you'll need to follow the setup instructions for the board here: https://github.com/SolderedElectronics/Inkplate-micropython/tree/master. Note, Soldered includes a Micropython firmware to use based on Micropython 1.18 so it may be missing some newer Micropython features. It is possible to outfit it with later versions but this did not work well for me when I tried.
 
-You'll also need to grab the default Inkplate driver files from the the Inkplate repo, I've only included my `main.py` file. You'll need these:
+You'll also need to grab the default Inkplate driver files from the the Inkplate repo, I've included my `main.py` file. You'll also need these (also included from the Soldered repo):
 - `gfx.py`
 - `gfx_standard_font_01.py`
 - `inkplate5.py`
@@ -19,3 +19,4 @@ The **Tilt Hydrometer** is a sensor that floats in your beer fermentation vessel
 Things to be improved on:
 - make the tilt handling code a bit more generic (so it automatically handles one or two devices of any color, currently hard coded for two)
 - improve the power saving by implementing a configureable deep sleep after reading values (currently doing a regular sleep for 1hr). Found this repo that I wish I'd found earlier that implements the deepsleep and wake with an Inkplate 2: https://github.com/planbnet/tiltplate/tree/main
+-   Implemented a lightsleep here to check powersaving
