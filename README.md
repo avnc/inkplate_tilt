@@ -1,4 +1,4 @@
-# Inkplate5 & Tilt Hydrometer
+# Inkplate 5 & Tilt Hydrometer
 This is a Micropython project to display [Tilt Hydrometer](https://tilthydrometer.com/products/copy-of-tilt-floating-wireless-hydrometer-and-thermometer-for-brewing) values on a [Soldered Inkplate 5](https://soldered.com/product/soldered-inkplate-5-gen2/). This code owes much to these projects which worked out the hard bluetooth part of this equation: https://github.com/myoung34/bluey-lite and https://github.com/jicese/picoTilt and https://github.com/planbnet/tiltplate/tree/main from which I have borrowed liberally.
 
 ![Image of Inkplate 5 with Tilt data](IMG_3984.jpg)
